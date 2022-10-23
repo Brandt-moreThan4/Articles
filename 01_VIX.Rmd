@@ -1,0 +1,157 @@
+# VIX
+
+Outline
+
+* Define the VIx
+* Why is it useful?
+* How stable has the vix been?
+* Any noteworthy regimes?
+* Can you get a "vix" like measurement for non-S&P things?
+* Does the vix do a good job of predicting future volatility?
+* What if you aggregated the "vix" by securities?
+* Or looked at options on sector ETFs?
+
+
+
+## What is the VIX?
+
+Helpful Resources:
+
+*  https://www.spglobal.com/spdji/en/vix-intro/
+*  https://www.cboe.com/tradable_products/vix/faqs/
+
+
+## To Do
+* NAs interpolate?
+* Slice up time into different regimes
+* Market timing strategy where you buy when vix is high and sell when it's low.
+* Showing a rolling, moving average
+* Define the vix
+* Summary Stats
+
+
+<!-- Load Packages -->
+
+```{r,message=FALSE,include=FALSE}
+
+library(tidyverse)
+library(data.table)
+library(tidyquant)
+library(DT)
+
+```
+
+
+```{r,include=FALSE}
+# Function definitions
+
+moving_average = function(numbers,window=5){
+  
+  data_length = length(numbers)
+  result = rep(NA,data_length)
+  
+  for (index in window:data_length) {
+    result[index] = mean(numbers[(index-window):index])
+  }
+  
+  return(result)
+}
+
+
+```
+
+
+## Download and Clean Data
+
+We get the VIX data from FRED, and the S&P 500 comes from Yahoo Finance.
+
+```{r,echo=FALSE}
+vix_data = tq_get("VIXCLS",get = "economic.data",from = "1970-01-01")
+sp500_data = data.table(tq_get("^GSPC",get = "stock.prices",from = "1900-01-01"))
+
+
+```
+
+
+```{r}
+vix = data.table(vix_data)
+
+vix[,lag_1:=shift(vix$price)]
+vix[,delta:=round(price-lag_1,2)]
+# vix$rolling_mean = moving_average(vix$price,15)
+
+vix_mean = mean(vix$price,na.rm = TRUE)
+
+# Dropping NAs. # Should probably interpolate instead?
+vix = vix[complete.cases(vix)]
+datatable(vix,filter = 'top')
+
+```
+
+### Graph Takeaways
+
+1. The VIX is often above its longterm average of 20ish.
+2. There are volatility regimes. Said differently, there appears to be autocorrelation in the vix.
+3. Sometimes the vix gets ridiculously high.
+
+```{r}
+
+ggplot(vix,aes(date,price)) +
+  geom_line(aes(color='VIX')) +
+  geom_hline(yintercept = vix_mean,color='red',size=1) +
+  labs(title='VIX') + 
+  scale_color_manual(name='Legend',
+                     breaks=c('VIX', 'Long-Term Average'),
+                     values=c('VIX'='black', 'Long-Term Average'='red'))
+
+
+```
+
+
+Clearly, the correlation is high. What's the cleanest way to get the auto correlations of the 
+past few lags?
+
+```{r}
+
+ggplot(vix,aes(lag_1,price)) + geom_point() 
+
+```
+
+
+Below looks like a simple random sample:
+
+```{r}
+
+
+ggplot(vix,aes(date,delta)) + geom_point() 
+
+```
+
+
+
+
+```{r}
+
+
+avg_vix_by_year = vix[,.(avg_vix=mean(price)),year(date)]
+ggplot(avg_vix_by_year,aes(year,avg_vix)) + geom_col()
+
+
+```
+
+
+```{r}
+
+
+merge(vix,sp500_data,by='date')
+
+
+```
+
+
+
+
+
+
+
+

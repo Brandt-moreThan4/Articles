@@ -1,0 +1,198 @@
+
+
+# S&P Weekly Predictions
+
+Let's paint a picture fo the scenario we find ourselves in. You work at a small office in Austin, Texas
+as a financial analyst. 
+
+
+It's likely too ambitious to believe we can correctly forecast the actual S&P 500 values, but more likely,
+we assume that we can at least discover which methods **do not** work. 
+
+
+
+```{r, include=FALSE, message=FALSE}
+# Import relevant packages:
+
+library(tidyverse)
+library(readxl)
+library(tidyquant)
+library(data.table)
+
+```
+
+
+## Downloading S&P 500 daily Data
+
+```{r}
+# S&P Daily Data
+
+sp_data <- tq_get("^GSPC",
+                 get = "stock.prices",
+                 from = "1900-01-01",
+                 to = "2022-10-01"
+)
+
+
+sp_data = sp_data %>% select(symbol, date,close)
+
+sp_data
+
+```
+
+Now, let's add on some more columns that we know we'll want to use in our analysis later on:
+
+* $PriceChange = Price_t - Price_{t-1}$
+* $Return = \frac{(Price_t - Price_{t-1})}{Price_{t-1}}$
+
+
+```{r}
+
+sp_data = sp_data %>% mutate(price_change = close - lag(close),
+                   ret = price_change/ lag(close),
+                   lag_price = lag(close),
+                   year = year(date),
+                   month = month(date),
+                   week = week(date),
+                   day = day(date)
+                   ) %>% drop_na()
+      
+sp_data
+
+
+```
+
+
+
+## EDA
+
+How about a little brief EDA, just to make sure we get a sense for what's going on??
+
+```{r}
+
+ggplot(sp_data,aes(date,close)) + geom_line()
+
+```
+
+Well that is kind of hard to read. Maybe log transforming it will make it more interesting?
+
+
+```{r}
+
+sp_data %>% mutate(log_price = log2(close)) %>%  
+  ggplot(aes(date,log_price)) + geom_line()
+
+```
+
+I suppose the takeaway from above analysis is that the S&P 500 does tend to go up over time. Not sure
+if that is really all that insightful.
+
+
+But we can see below that the price change is clearly no where near constant overtime.
+
+```{r}
+
+sp_data %>% ggplot(aes(date,price_change)) + geom_point()
+
+```
+
+
+One of the takeaways I'd see from here is that there seem to be periods of high-volatility:
+big % changes are followed by big % changes.
+
+
+```{r}
+sp_data %>% ggplot(aes(date,ret)) + geom_point()
+```
+
+
+## Modeling
+
+EDA should give us some idea of the proper mathematical models to use to fit the data.
+
+### Base Model
+
+I think it is important to always start with a base model. You need some sort of benchmark
+with which to judge the performance of your more complicated models later on. If the 
+fancier models do not yield much additional predictive or explanatory power, then they 
+most likely are not worth the added complexity. 
+
+
+The value next week is equal to today's value. This makes the assumption that the
+data is following a random walk.
+
+
+```{r}
+
+sp500 = data.table(sp_data)
+
+
+#This is what we are trying to predict
+sp500[,.(last_price=close[length(close)]),by=.(year,week)]
+
+
+
+```
+
+### Rolling Mean
+
+```{r}
+
+
+
+```
+
+### Base Model with Economic Intuition
+
+Model that shows accounts for stock's having a risk premium. Equivalent to geometric
+random walk, with a drift.
+
+
+
+
+
+### Time-Series Regression
+
+
+```{r}
+
+mod = lm(close ~ lag_price,sp_data)
+summary(mod)
+
+plot(sp_data$lag_price,mod$residuals)
+
+
+
+```
+
+
+
+### Cross-Validation
+
+A better approach would involve using cross-validation to choose the appropriate model parameters.
+
+
+
+### Simplifying Problem
+
+Essential question: by simplifying the input data, our hope is that the loss of information we have from throwing
+away data is outweighed by the gain garnered from eliminating some of the noise. 
+
+
+
+#### Predicting Up or Down
+
+
+
+## Conclusions
+
+
+* Which approach is best
+* A high R^2 does not mean we have a profitable trading strategy...
+* Addding additional predictor variables would be nice.
+
+
+
+
+
+

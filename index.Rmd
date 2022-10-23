@@ -1,0 +1,43 @@
+--- 
+title: "Fun With Brandt"
+author: "Brandt Green"
+date: "Last Updated on October 15, 2022"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: [book.bib, packages.bib]
+url: 'https://bookdown.org/brandtgreen97/Book/'
+cover-image: neil.jpg
+description: |
+  Some description is supposed to go here. Not sure where it renders tho
+link-citations: yes
+github-repo: rstudio/bookdown-demo
+---
+
+# Intro {-}
+
+I do not currently have a strong vision on the structure of this book yet, but for now, I just see it
+as a convenient place to dump my blog-like writings into, while also leveraging the power of R Markdown.
+
+
+
+I expect most of the topics discussed to be centered around the world of finance - seeing as finance
+is the highest calling of mankind, it is only just to give finance its due. I would like to use a writing
+approach that is data-focused and visual heavy, which is partly the motivation for using R Markdown as
+the medium of choice. I expect that many of the articles will take on an exploratory tone, where I start a series of questions or a topic that I would like to learn more about and then walk through the process of acquiring a deeper understanding. 
+
+
+As of now, I do not expect that I will include many, if any code snippets in this book - though the entire source code will be available on my Github for the those who are interested. I am planning to write another book that is more heavily focused on the programming guides so I will try to keep code clutter out of the way of the primary content.
+
+
+## Topics
+
+
+
+
+
+```{r include=FALSE}
+# automatically create a bib database for R packages
+knitr::write_bib(c(
+  .packages(), 'bookdown', 'knitr', 'rmarkdown'
+), 'packages.bib')
+```
